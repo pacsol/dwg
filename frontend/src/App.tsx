@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import axios from 'axios';
 import FileUpload from './components/FileUpload';
 import LayerPanel from './components/LayerPanel';
