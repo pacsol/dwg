@@ -23,9 +23,9 @@ function App() {
 
     try {
       const [layersRes, measurementsRes, previewRes] = await Promise.all([
-        axios.get<LayerResponse>(`http://localhost:8000/api/files/${id}/layers`),
-        axios.get<MeasurementResponse>(`http://localhost:8000/api/files/${id}/measurements`),
-        axios.get<PreviewData>(`http://localhost:8000/api/files/${id}/preview`)
+        axios.get<LayerResponse>(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/files/${id}/layers`),
+        axios.get<MeasurementResponse>(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/files/${id}/measurements`),
+        axios.get<PreviewData>(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/files/${id}/preview`)
       ]);
 
       setLayers(layersRes.data);
