@@ -4,14 +4,7 @@ services:
     runtime: python
     plan: free
     rootDir: backend
-    buildCommand: |
-      # Install ODA File Converter for DWG/DXF conversion
-      apt-get update && apt-get install -y wget unzip
-      wget -q https://download.opendesign.com/guestfiles/Demo/ODAFileConverter_QT6_lnxX64_25.11dll_3.4.0.zip -O /tmp/oda.zip
-      unzip -q /tmp/oda.zip -d /opt/oda
-      chmod +x /opt/oda/ODAFileConverter
-      rm /tmp/oda.zip
-      pip install -r requirements.txt
+    buildCommand: ./build.sh
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port 8000
     envVars:
       - key: PYTHON_VERSION
