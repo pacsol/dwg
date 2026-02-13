@@ -31,9 +31,11 @@ function App() {
       setLayers(layersRes.data);
       setMeasurements(measurementsRes.data);
       setPreview(previewRes.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching file data:', error);
-      alert('Failed to load file data. Please try again.');
+      const errorMsg = error.response?.data?.detail || error.message || 'Unknown error';
+      const errorStatus = error.response?.status || '';
+      alert(`Failed to load file data (${errorStatus}): ${errorMsg}`);
     } finally {
       setLoading({ layers: false, measurements: false, preview: false });
     }
