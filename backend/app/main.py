@@ -245,15 +245,16 @@ def parse_dxf_file(filepath: str):
 
     try:
         if file_ext == '.dwg':
-            # Convert DWG to DXF using ODA File Converter
-            print(f"Converting DWG to DXF: {filepath}")
-            dxf_path = convert_dwg_to_dxf(filepath)
-            print(f"Conversion complete: {dxf_path}")
-            doc = ezdxf.readfile(dxf_path)
-            # Clean up converted DXF file
-            if os.path.exists(dxf_path) and dxf_path != filepath:
-                os.remove(dxf_path)
-            return doc
+            # DWG is a proprietary binary format that requires external conversion
+            # ezdxf can only read DXF (text-based) format natively
+            raise HTTPException(
+                status_code=400,
+                detail="DWG files require conversion to DXF. Please convert your file using:\n"
+                       "1. AutoCAD: SAVEAS → DXF format\n"
+                       "2. FreeCAD: File → Export → DXF (free)\n"
+                       "3. Online: anyconv.com, zamzar.com\n"
+                       "4. Or use the sample.dxf file from our GitHub repo"
+            )
         else:
             doc = ezdxf.readfile(filepath)
             return doc
