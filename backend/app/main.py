@@ -174,6 +174,60 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 
+
+def convert_dwg_to_dxf(dwg_path: str) -> str:
+    """Convert DWG to DXF using ODA File Converter"""
+    import subprocess
+    import os
+
+    dxf_path = dwg_path.replace('.dwg', '.dxf')
+    oda_path = os.environ.get('ODA_CONVERTER_PATH', '/opt/oda/ODAFileConverter')
+
+    # Check if ODA converter exists
+    if not os.path.exists(oda_path):
+        # Try to find it in PATH
+        result = subprocess.run(['which', 'ODAFileConverter'], capture_output=True, text=True)
+        if result.returncode == 0:
+            oda_path = result.stdout.strip()
+        else:
+            raise Exception("ODA File Converter not found. Please install it or convert DWG to DXF manually.")
+
+    # ODAFileConverter syntax: "InputFolder" "OutputFolder" "ACAD2018" "ACAD2018" "DXF" "1" "1"
+    # Version "ACAD2018" = AutoCAD 2018 format
+    # Output type "DXF" = DXF format
+    # "1" "1" = recursive, audit
+    input_dir = os.path.dirname(dwg_path) or '.'
+    output_dir = input_dir
+    filename = os.path.basename(dwg_path)
+
+    cmd = [
+        oda_path,
+        input_dir,
+        output_dir,
+        "ACAD2018",  # Input version (auto-detect)
+        "ACAD2018",  # Output version
+        "DXF",       # Output format
+        "0",         # Recursive (0=no)
+        "1"          # Audit (1=yes)
+    ]
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        if result.returncode != 0:
+            print(f"ODA conversion stderr: {result.stderr}")
+
+        # Check if output file was created
+        expected_dxf = os.path.splitext(dwg_path)[0] + '.dxf'
+        if os.path.exists(expected_dxf):
+            return expected_dxf
+        else:
+            raise Exception(f"Conversion failed. Output file not found: {expected_dxf}")
+    except subprocess.TimeoutExpired:
+        raise Exception("DWG conversion timed out")
+    except Exception as e:
+        raise Exception(f"DWG conversion failed: {e}")
+
+
 def parse_dxf_file(filepath: str):
     """Parse a DXF/DWG file and return the document"""
     import ezdxf
@@ -183,9 +237,15 @@ def parse_dxf_file(filepath: str):
 
     try:
         if file_ext == '.dwg':
-            # DWG files require external converter (ODA File Converter) which is not installed
-            # ezdxf cannot natively read DWG format - only DXF
-            raise Exception("DWG files are not supported. Please convert to DXF format first using AutoCAD, FreeCAD, or any online DWG-to-DXF converter.")
+            # Convert DWG to DXF using ODA File Converter
+            print(f"Converting DWG to DXF: {filepath}")
+            dxf_path = convert_dwg_to_dxf(filepath)
+            print(f"Conversion complete: {dxf_path}")
+            doc = ezdxf.readfile(dxf_path)
+            # Clean up converted DXF file
+            if os.path.exists(dxf_path) and dxf_path != filepath:
+                os.remove(dxf_path)
+            return doc
         else:
             doc = ezdxf.readfile(filepath)
             return doc
