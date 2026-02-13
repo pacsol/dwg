@@ -181,7 +181,15 @@ def convert_dwg_to_dxf(dwg_path: str) -> str:
     import os
 
     dxf_path = dwg_path.replace('.dwg', '.dxf')
-    oda_path = os.environ.get('ODA_CONVERTER_PATH', '/opt/oda/ODAFileConverter')
+    # Check multiple possible locations for ODA File Converter
+    oda_path = os.environ.get('ODA_CONVERTER_PATH', '/tmp/oda/ODAFileConverter')
+
+    # Fallback locations
+    if not os.path.exists(oda_path):
+        for fallback in ['/tmp/oda/ODAFileConverter', '/opt/oda/ODAFileConverter', './ODAFileConverter']:
+            if os.path.exists(fallback):
+                oda_path = fallback
+                break
 
     # Check if ODA converter exists
     if not os.path.exists(oda_path):

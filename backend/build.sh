@@ -1,21 +1,22 @@
 #!/bin/bash
 set -e
 
-echo "=== Installing ODA File Converter ==="
-apt-get update
-apt-get install -y wget unzip
+echo "=== Installing ODA File Converter (without apt-get) ==="
 
-# Download ODA File Converter
+# Download ODA File Converter directly
 wget -q "https://download.opendesign.com/guestfiles/Demo/ODAFileConverter_QT6_lnxX64_25.11dll_3.4.0.zip" -O /tmp/oda.zip
 
-# Extract
-mkdir -p /opt/oda
-unzip -q /tmp/oda.zip -d /opt/oda
-chmod +x /opt/oda/ODAFileConverter
+# Extract to /tmp since /opt may also be read-only
+mkdir -p /tmp/oda
+unzip -q /tmp/oda.zip -d /tmp/oda
+chmod +x /tmp/oda/ODAFileConverter
 rm /tmp/oda.zip
 
-echo "=== ODA File Converter installed at /opt/oda/ODAFileConverter ==="
-ls -la /opt/oda/
+echo "=== ODA File Converter installed at /tmp/oda/ODAFileConverter ==="
+ls -la /tmp/oda/
+
+# Update environment variable path
+export ODA_CONVERTER_PATH=/tmp/oda/ODAFileConverter
 
 echo "=== Installing Python dependencies ==="
 pip install -r requirements.txt
