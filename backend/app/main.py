@@ -175,13 +175,39 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 def parse_dxf_file(filepath: str):
-    """Parse a DXF file and return the document"""
+    """Parse a DXF/DWG file and return the document"""
     import ezdxf
+    import os
+
+    file_ext = os.path.splitext(filepath)[1].lower()
+
     try:
-        doc = ezdxf.readfile(filepath)
-        return doc
+        if file_ext == '.dwg':
+            # Try to use ODA File Converter or direct reading
+            # First attempt: try direct reading (ezdxf may support some DWG versions)
+            try:
+                doc = ezdxf.readfile(filepath)
+                print(f"Successfully read DWG directly: {filepath}")
+                return doc
+            except Exception as e1:
+                print(f"Direct DWG read failed: {e1}")
+                # Second attempt: try ODA File Converter addon
+                try:
+                    from ezdxf.addons import odafc
+                    dxf_path = filepath.replace('.dwg', '_converted.dxf')
+                    odafc.convert(filepath, dxf_path)
+                    doc = ezdxf.readfile(dxf_path)
+                    os.remove(dxf_path)
+                    print(f"Successfully converted DWG to DXF: {filepath}")
+                    return doc
+                except Exception as e2:
+                    print(f"ODA conversion failed: {e2}")
+                    raise Exception(f"Cannot parse DWG file. Please convert to DXF first. Errors: {e1}, {e2}")
+        else:
+            doc = ezdxf.readfile(filepath)
+            return doc
     except Exception as e:
-        print(f"Error parsing DXF: {e}")
+        print(f"Error parsing file {filepath}: {e}")
         return None
 
 
